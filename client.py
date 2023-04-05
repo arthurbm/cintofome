@@ -36,6 +36,7 @@ while True:
             break
     except socket.timeout:
         # Se o tempo limite expirar, exibe uma mensagem de erro e sai do loop
+        f.close()
         print(f"Tempo limite de {TIMEOUT_LIMIT} segundos atingido. Encerrando conexão...")
         break
 

@@ -42,11 +42,12 @@ try:
     with open(filename, "rb") as f:
         data = f.read(BUFFER_SIZE)
         while data:
-            extraMessageServer = " -> received from server"
+            extraMessageServer = " -> sent from server"
             sock.sendto(data + extraMessageServer.encode(), client_fixed_addr)
             data = f.read(BUFFER_SIZE)
 
 except socket.timeout:
+    f.close()
     print(f"Tempo limite de {TIMEOUT_LIMIT} segundos atingido. Encerrando conexão...")
 
 # Fecha o socket
