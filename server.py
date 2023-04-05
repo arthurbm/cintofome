@@ -42,7 +42,7 @@ try:
     with open(filename, "rb") as f:
         data = f.read(BUFFER_SIZE)
         while data:
-            extraMessageServer = " -> sent from server"
+            extraMessageServer = " -> received from server"
             sock.sendto(data + extraMessageServer.encode(), client_fixed_addr)
             data = f.read(BUFFER_SIZE)
 

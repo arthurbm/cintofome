@@ -1,1 +1,1 @@
-texto de exemplo -> sent from server
+texto de exemplo -> received from server
