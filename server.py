@@ -35,15 +35,15 @@ try:
 
     # Salva o arquivo recebido
     with open("received_server_" + filename, "wb") as f:
-        extraMessageClient = "-> received from client"
-        f.write(received_data + extraMessageClient.encode())
+        extra_message_client = "-> received from client"
+        f.write(received_data + extra_message_client.encode())
 
     # Abre o arquivo recebido e envia ele de volta para o cliente em pedaços de tamanho BUFFER_SIZE
     with open(filename, "rb") as f:
         data = f.read(BUFFER_SIZE)
         while data:
-            extraMessageServer = " -> received from server"
-            sock.sendto(data + extraMessageServer.encode(), client_fixed_addr)
+            extra_message_server = " -> received from server"
+            sock.sendto(data + extra_message_server.encode(), client_fixed_addr)
             data = f.read(BUFFER_SIZE)
 
 except socket.timeout:
