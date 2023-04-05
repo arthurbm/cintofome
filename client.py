@@ -38,7 +38,7 @@ while True:
         break
 
 # Salva o arquivo recebido
-with open("received_" + filename, "wb") as f:
+with open("received_client_" + filename, "wb") as f:
     f.write(received_data)
 
 # Fecha o socket

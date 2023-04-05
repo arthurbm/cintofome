@@ -31,11 +31,11 @@ while True:
         break
 
 # Salva o arquivo recebido
-with open("received_" + filename, "wb") as f:
+with open("received_server_" + filename, "wb") as f:
     f.write(received_data)
 
 # Abre o arquivo recebido e envia ele de volta para o cliente em pedaços de tamanho BUFFER_SIZE
-with open("received_" + filename, "rb") as f:
+with open("received_server_" + filename, "rb") as f:
     data = f.read(BUFFER_SIZE)
     while data:
         sock.sendto(data, addr)
