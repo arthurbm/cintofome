@@ -1,6 +1,6 @@
 import socket
-from constants import BUFFER_SIZE, TIMEOUT_LIMIT, UDP_IP, UDP_PORT, PACKET_LOSS_PROB
-from aux_functions import make_packet, extract_data, send_packet, wait_for_ack, send_ack
+from constants import BUFFER_SIZE, TIMEOUT_LIMIT, UDP_IP, UDP_PORT, PACKET_LOSS_PROB, PACKET_LOSS_PROB
+from aux_functions import make_packet, extract_data, send_packet, wait_for_ack, send_ack, packet_loss
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((UDP_IP, UDP_PORT))
@@ -34,7 +34,7 @@ while True:
             print(f"Pacote recebido: {packet_data}")
             send_ack(sock, recv_seq_num, addr)
             expected_seq_num = 1 - expected_seq_num
-            received_data += packet_data.encode('latin1')
+            received_data += packet_data.encode('utf-8')
             if len(packet_data) < BUFFER_SIZE:
                 break
         else:
@@ -50,14 +50,16 @@ with open("received_server_" + filename, "wb") as f:
 
 seq_num = 0
 
-# Abre o arquivo recebido e armazenado, e envia de volta para o cliente em pedaços de tamanho BUFFER_SIZE
-with open("received_server_" + filename, "rb") as f:
+# Abre o arquivo recebido e armazenado e envia de volta para o cliente em pedaços de tamanho BUFFER_SIZE
+with open("received_on_server_" + filename, "rb") as f:
     data = f.read(BUFFER_SIZE)
     while data:
         # Envia o pedaço de arquivo para o cliente usando rdt3.0
-        packet = make_packet(seq_num, data.decode('latin1'))
+        packet = make_packet(seq_num, data.decode('utf-8'))
+        # print(f"Enviando pacote {seq_num}")
         send_packet(sock, packet, client_fixed_addr)
-        if wait_for_ack(sock, seq_num):
+        ack_received = wait_for_ack(sock, seq_num)
+        if ack_received:
             seq_num = 1 - seq_num
             data = f.read(BUFFER_SIZE)
         else:

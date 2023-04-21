@@ -1,7 +1,7 @@
 import socket
 import time
-from constants import BUFFER_SIZE, TIMEOUT_LIMIT, UDP_IP, UDP_PORT
-from aux_functions import make_packet, extract_data, send_packet, wait_for_ack, send_ack
+from constants import BUFFER_SIZE, TIMEOUT_LIMIT, UDP_IP, UDP_PORT, PACKET_LOSS_PROB
+from aux_functions import make_packet, extract_data, send_packet, wait_for_ack, send_ack, packet_loss
 
 filename = "example.txt"
 
@@ -24,9 +24,15 @@ with open(filename, "rb") as f:
     data = f.read(BUFFER_SIZE)
     while data:
         # Envia o pedaço de arquivo para o servidor usando rdt3.0
-        packet = make_packet(seq_num, data.decode('latin1'))
-        send_packet(sock, packet, (UDP_IP, UDP_PORT))
-        if wait_for_ack(sock, seq_num):
+        packet = make_packet(seq_num, data.decode('utf-8'))
+        if not packet_loss(PACKET_LOSS_PROB):
+            send_packet(sock, packet, (UDP_IP, UDP_PORT))
+            ack_received = wait_for_ack(sock, seq_num)
+        else:
+            print("Perdendo pacote intencionalmente")
+            ack_received = False
+
+        if ack_received:
             seq_num = 1 - seq_num
             data = f.read(BUFFER_SIZE)
         else:
@@ -42,7 +48,7 @@ while True:
             print(f"Pacote recebido: {packet_data}")
             send_ack(sock, recv_seq_num, addr)
             seq_num = 1 - seq_num
-            received_data += packet_data.encode('latin1')
+            received_data += packet_data.encode('utf-8')
             if len(packet_data) < BUFFER_SIZE:
                 break
         else:
