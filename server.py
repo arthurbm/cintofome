@@ -22,6 +22,7 @@ try:
         send_ack(sock, 1 - expected_seq_num, addr)
 
     client_fixed_addr = addr
+    # Cria um buffer para armazenar o arquivo recebido
     received_data = b""
 
     # Recebe o arquivo do cliente em pedaços de tamanho BUFFER_SIZE
