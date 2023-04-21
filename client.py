@@ -6,6 +6,8 @@ from aux_functions import make_packet, extract_data, send_packet, wait_for_ack, 
 filename = "example.txt"
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# Define um tempo limite para receber uma resposta do servidor (em segundos)
 sock.settimeout(TIMEOUT_LIMIT)
 
 seq_num = 0
@@ -55,12 +57,13 @@ while True:
             print(f"Pacote incorreto: {packet_data}, enviando ACK anterior")
             send_ack(sock, 1 - seq_num, addr)
     except socket.timeout:
-        print(f"Tempo limite de {TIMEOUT_LIMIT} segundos atingido. Encerrando conexão...")
+        print(
+            f"Tempo limite de {TIMEOUT_LIMIT} segundos atingido. Encerrando conexão...")
         break
 
 # Salva o arquivo recebido
 with open("received_client_" + filename, "wb") as f:
-  f.write(received_data)
+    f.write(received_data)
 
 # Fecha o socket
 sock.close()
