@@ -5,8 +5,9 @@ from aux_functions import extract_packet, send_packet, wait_for_ack, send_ack, P
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((UDP_IP, UDP_PORT))
 sock.settimeout(TIMEOUT_LIMIT)
-
 print("Servidor pronto para receber arquivos...")
+filename = ""
+
 try:
     expected_seq_num = 0
 
@@ -16,6 +17,7 @@ try:
 
     if packet.seq_n == expected_seq_num:
         print(f"Nome do arquivo recebido: {packet.data}")
+        filename = packet.data
         send_ack(sock, packet.seq_n, addr)
         expected_seq_num = 1 - expected_seq_num
     else:
@@ -32,7 +34,7 @@ try:
            # Recebe um pacote do cliente
             data, addr = sock.recvfrom(BUFFER_SIZE)
             packet = extract_packet(data)
-            filename = packet.data
+            # filename = packet.data
             if packet.seq_n == expected_seq_num:
                 # Avalia o checksum dele
                 if packet.checksum ==  packet.real_checksum():
@@ -64,7 +66,7 @@ try:
         data = f.read(BUFFER_SIZE)
         while data:
             # Envia o pedaço de arquivo para o cliente usando rdt3.0
-            packet = Packet(seq_num, data.decode('utf-8'), 0, 0)
+            packet = Packet(seq_num, False, data.decode('utf-8'))
             # print(f"Enviando pacote {seq_num}")
             send_packet(sock, packet, client_fixed_addr)
             ack_received = wait_for_ack(sock, seq_num)

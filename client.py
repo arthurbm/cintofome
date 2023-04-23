@@ -26,7 +26,7 @@ with open(filename, "rb") as f:
     data = f.read(BUFFER_SIZE)
     while data:
         # Envia o pedaço de arquivo para o servidor usando rdt3.0
-        packet = Packet(seq_num, data.decode('utf-8'), 0, 0)
+        packet = Packet(seq_num, False, data.decode('utf-8'))
         if not packet_loss(PACKET_LOSS_PROB):
             send_packet(sock, packet, (UDP_IP, UDP_PORT))
             ack_received = wait_for_ack(sock, seq_num)
