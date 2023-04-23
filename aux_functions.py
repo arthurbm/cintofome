@@ -21,7 +21,7 @@ class Packet:
     def reading_size(self):
         _checksum = self.real_checksum()
         packet_return = (str(self.seq_n) + "|" + str(_checksum) + "|" + str(self.is_ack) + "|")
-        return len(packet_return.encode('utf-8')) + 32
+        return len(packet_return.encode('utf-8')) + 16 
 
     def make_packet(self):
         _checksum = self.real_checksum()
@@ -74,7 +74,7 @@ def wait_for_ack(sock, expected_ack):
             return True
         else:
             print(f"ACK incorreto: {ack.seq_n}, esperado: {expected_ack}")
-            exit()
+            # exit()
             return False
     except socket.timeout:
         print(f"Tempo limite de {TIMEOUT_LIMIT} segundos atingido.")
