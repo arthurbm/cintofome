@@ -12,7 +12,7 @@ class Packet:
 
     def make_packet(self):
         _checksum = self.real_checksum()
-        return (str(self.seq_n) + "|" + str(_checksum) + "|" + str(self.ack_n)  "|" + str(self.data))
+        return (str(self.seq_n) + "|" + str(_checksum) + "|" + str(self.ack_n) + "|" + str(self.data))
 
     # TODO: implement is_ack, checksum and is_corrupt
     def is_ACK(self):
