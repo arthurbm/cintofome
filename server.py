@@ -1,6 +1,6 @@
 import socket
-from constants import BUFFER_SIZE, TIMEOUT_LIMIT, UDP_IP, UDP_PORT, PACKET_LOSS_PROB, PACKET_LOSS_PROB
-from aux_functions import make_packet, extract_data, send_packet, wait_for_ack, send_ack, packet_loss, calculate_checksum
+from constants import BUFFER_SIZE, TIMEOUT_LIMIT, UDP_IP, UDP_PORT
+from aux_functions import make_packet, extract_data, send_packet, wait_for_ack, send_ack, Packet
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((UDP_IP, UDP_PORT))
@@ -13,7 +13,7 @@ try:
     # Recebe o nome do arquivo do cliente
     data, addr = sock.recvfrom(BUFFER_SIZE)
     recv_seq_num, checksum, filename = extract_data(data)
-    if recv_seq_num == expected_seq_num and checksum == calculate_checksum(filename.encode()):
+    if recv_seq_num == expected_seq_num and checksum == Packet.real_checksum(filename.encode()):
         print(f"Nome do arquivo recebido: {filename}")
         send_ack(sock, recv_seq_num, addr)
         expected_seq_num = 1 - expected_seq_num
@@ -33,7 +33,7 @@ try:
             recv_seq_num, recv_checksum, packet_data = extract_data(data)
             if recv_seq_num == expected_seq_num:
                 # Avalia o checksum dele
-                if recv_checksum == calculate_checksum(packet_data.encode()):
+                if recv_checksum ==  Packet.real_checksum(packet_data.encode()):
                     print(f"Pacote recebido: {packet_data}")
                     send_ack(sock, recv_seq_num, addr)
                     expected_seq_num = 1 - expected_seq_num
@@ -41,7 +41,7 @@ try:
                     if len(packet_data) < BUFFER_SIZE:
                         break
                 else:
-                    print(f"Checksum incorreto: {recv_checksum}, esperado: {calculate_checksum(packet_data.encode())}")
+                    print(f"Checksum incorreto: {recv_checksum}, esperado: { Packet.real_checksum(packet_data.encode())}")
                     send_ack(sock, 1 - expected_seq_num, addr)
             else:
                 print(f"Pacote incorreto: {packet_data}, enviando ACK anterior")

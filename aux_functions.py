@@ -12,7 +12,7 @@ class Packet:
 
     def make_packet(self):
         _checksum = self.real_checksum()
-        return (str(self.seq_n) + "|" + str(_checksum) + "|" + str(self.ack_n)  "|" + str(self.data))
+        return (str(self.seq_n) + "|" + str(_checksum) + "|" + str(self.ack_n) + "|" + str(self.data))
 
     # TODO: implement is_ack, checksum and is_corrupt
     def is_ACK(self):
@@ -36,7 +36,7 @@ class Packet:
     def is_corrupt(self):
         return self.real_checksum() != self.checksum
 
-def make_packet(seq_num, checksum, data):
+def make_packet(seq_num, data):
     return (str(seq_num) + "|" + data).encode()
 
 def extract_data(packet):
@@ -61,7 +61,7 @@ def make_ack_packet(seq_num):
 
 def wait_for_ack(sock, expected_ack):
     try:
-        data, addr = sock.recvfrom(BUFFER_SIZE)
+        data, _ = sock.recvfrom(BUFFER_SIZE)
         ack = int(data.decode().split("|")[0])
         if ack == expected_ack:
             print(f"ACK recebido: {ack}")
