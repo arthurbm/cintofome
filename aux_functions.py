@@ -12,14 +12,15 @@ class Packet:
 
     def make_packet(self):
         _checksum = self.real_checksum()
-        return (str(self.seq_n) + "|" + str(_checksum) + "|" + self.data).encode()
+        return (str(self.seq_n) + "|" + str(_checksum) + "|" + str(self.ack_n)  "|" + str(self.data))
 
     # TODO: implement is_ack, checksum and is_corrupt
     def is_ACK(self):
         return (self.seq_n == "" and self.data == "")
 
     def real_checksum(self):
-        data = self.make_packet().encode()
+        data = str(self.seq_n) + str(self.ack_n) + str(self.data)
+        data = data.encode()
 
         polynomial = 0x1021
         crc = 0xFFFF
@@ -34,7 +35,6 @@ class Packet:
 
     def is_corrupt(self):
         return self.real_checksum() != self.checksum
-
 
 def make_packet(seq_num, checksum, data):
     return (str(seq_num) + "|" + data).encode()
