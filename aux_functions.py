@@ -40,8 +40,8 @@ class Packet:
 
 
 def extract_packet(string_packet):
-    seq_num, checksum, ack_num, data = string_packet.split("|", 3)
-    return Packet(seq_num, ack_num, data, checksum)
+    seq_num, checksum_, is_ack, data = string_packet.split("|", 3)
+    return Packet(seq_num, is_ack, data, checksum=checksum_)
 
 def send_packet(sock, packet, addr):
     print(f"Enviando pacote: {packet.decode()}")
