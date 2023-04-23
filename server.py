@@ -1,6 +1,6 @@
 import socket
 from constants import BUFFER_SIZE, TIMEOUT_LIMIT, UDP_IP, UDP_PORT
-from aux_functions import make_packet, extract_data, send_packet, wait_for_ack, send_ack, Packet
+from aux_functions import extract_packet, extract_data, send_packet, wait_for_ack, send_ack, Packet
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((UDP_IP, UDP_PORT))
@@ -13,7 +13,7 @@ try:
     # Recebe o nome do arquivo do cliente
     data, addr = sock.recvfrom(BUFFER_SIZE)
     recv_seq_num, checksum, filename = extract_data(data)
-    if recv_seq_num == expected_seq_num and checksum == Packet.real_checksum(filename.encode()):
+    if recv_seq_num == expected_seq_num and checksum == Packet.real_checksum(filename.encode()): # Change this!
         print(f"Nome do arquivo recebido: {filename}")
         send_ack(sock, recv_seq_num, addr)
         expected_seq_num = 1 - expected_seq_num
@@ -33,7 +33,7 @@ try:
             recv_seq_num, recv_checksum, packet_data = extract_data(data)
             if recv_seq_num == expected_seq_num:
                 # Avalia o checksum dele
-                if recv_checksum ==  Packet.real_checksum(packet_data.encode()):
+                if recv_checksum ==  Packet.real_checksum(packet_data.encode()): # Change this!
                     print(f"Pacote recebido: {packet_data}")
                     send_ack(sock, recv_seq_num, addr)
                     expected_seq_num = 1 - expected_seq_num
@@ -41,7 +41,7 @@ try:
                     if len(packet_data) < BUFFER_SIZE:
                         break
                 else:
-                    print(f"Checksum incorreto: {recv_checksum}, esperado: { Packet.real_checksum(packet_data.encode())}")
+                    print(f"Checksum incorreto: {recv_checksum}, esperado: { Packet.real_checksum(packet_data.encode())}") # Change this!
                     send_ack(sock, 1 - expected_seq_num, addr)
             else:
                 print(f"Pacote incorreto: {packet_data}, enviando ACK anterior")
@@ -62,7 +62,7 @@ try:
         data = f.read(BUFFER_SIZE)
         while data:
             # Envia o pedaço de arquivo para o cliente usando rdt3.0
-            packet = make_packet(seq_num, data.decode('utf-8'))
+            packet = Packet(seq_num, data.decode('utf-8'), 0, 0)
             # print(f"Enviando pacote {seq_num}")
             send_packet(sock, packet, client_fixed_addr)
             ack_received = wait_for_ack(sock, seq_num)

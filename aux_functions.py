@@ -36,16 +36,10 @@ class Packet:
     def is_corrupt(self):
         return self.real_checksum() != self.checksum
 
-def make_packet(seq_num, data):
-    return (str(seq_num) + "|" + data).encode()
 
-def extract_data(packet):
-    seq_num, checksum, data = packet.decode().split("|", 2)
-    return int(seq_num), int(checksum), data
-
-def extract_seq_num(packet):
-    seq_num, _ = packet.decode().split("|", 1)
-    return int(seq_num)
+def extract_packet(string_packet):
+    seq_num, checksum, ack_num, data = string_packet.split("|", 3)
+    return Packet(seq_num, ack_num, data, checksum)
 
 def send_packet(sock, packet, addr):
     print(f"Enviando pacote: {packet.decode()}")
