@@ -1,85 +1,73 @@
 import socket
+import time
 from constants import BUFFER_SIZE, TIMEOUT_LIMIT, UDP_IP, UDP_PORT, PACKET_LOSS_PROB
-from Packet import Packet
+from packet import Packet
+import random
+
+filename = "example.txt"
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind((UDP_IP, UDP_PORT))
+
+# Define um tempo limite para receber uma resposta do servidor (em segundos)
 sock.settimeout(TIMEOUT_LIMIT)
 
-print("Servidor pronto para receber arquivos...")
+seq_num = 0
 
-try:
-    expected_seq_num = 0
+# Envia o nome do arquivo para o servidor
+packet = Packet(seq_num, filename.encode())
+packet.add_checksum()
+sock.sendto(packet.to_bytes(), (UDP_IP, UDP_PORT))
+if Packet.from_bytes(sock.recv(BUFFER_SIZE)).is_corrupt():
+    print("Reenviando nome do arquivo...")
+else:
+    seq_num = 1 - seq_num
 
-    # Recebe o nome do arquivo do cliente
-    data, addr = sock.recvfrom(BUFFER_SIZE)
-    packet, checksum = Packet.from_bytes(data)
-    recv_seq_num = packet.seq_num
-    filename = packet.data
+# Abre o arquivo que será enviado
+with open(filename, "rb") as f:
+    # Lê o arquivo em pedaços de tamanho BUFFER_SIZE
+    data = f.read(BUFFER_SIZE)
+    while data:
+        # Envia o pedaço de arquivo para o servidor usando rdt3.0
+        packet = Packet(seq_num, data)
+        packet.add_checksum()
+        if not packet_loss(PACKET_LOSS_PROB):
+            sock.sendto(packet.to_bytes(), (UDP_IP, UDP_PORT))
+            ack_received = Packet.from_bytes(sock.recv(BUFFER_SIZE)).is_ACK(seq_num)
+        else:
+            print("Perdendo pacote intencionalmente")
+            ack_received = False
 
-    if not packet.is_corrupt() and recv_seq_num == expected_seq_num:
-        print(f"Nome do arquivo recebido: {filename}")
-        Packet.send_ack(sock, recv_seq_num, addr)
-        expected_seq_num = 1 - expected_seq_num
-    else:
-        print(f"Pacote incorreto: {packet.data}, enviando ACK anterior")
-        Packet.send_ack(sock, 1 - expected_seq_num, addr)
+        if ack_received:
+            seq_num = 1 - seq_num
+            data = f.read(BUFFER_SIZE)
+        else:
+            print("Reenviando pacote...")
 
-    client_fixed_addr = addr
-    # Cria um buffer para armazenar o arquivo recebido
-    received_data = b""
+received_data = b""
+while True:
+    try:
+        # Recebe um pacote do servidor
+        data, addr = sock.recvfrom(BUFFER_SIZE)
+        packet = Packet.from_bytes(data)
+        if not packet.is_corrupt() and packet.is_ACK(seq_num):
+            print(f"Pacote recebido: {packet.get_data().decode()}")
+            seq_num = 1 - seq_num
+            received_data += packet.get_data()
+            if len(packet.get_data()) < BUFFER_SIZE:
+                break
+        else:
+            print(f"Pacote incorreto, enviando ACK anterior")
+            packet = Packet(1 - seq_num, b'')
+            packet.add_checksum()
+            sock.sendto(packet.to_bytes(), addr)
+    except socket.timeout:
+        print(
+            f"Tempo limite de {TIMEOUT_LIMIT} segundos atingido. Encerrando conexão...")
+        break
 
-    # Recebe o arquivo do cliente em pedaços de tamanho BUFFER_SIZE
-    while True:
-        try:
-            # Recebe um pacote do cliente
-            data, addr = sock.recvfrom(BUFFER_SIZE)
-            packet, checksum = Packet.from_bytes(data)
-            recv_seq_num = packet.seq_num
-            packet_data = packet.data
+# Salva o arquivo recebido
+with open("received_on_client_" + filename, "wb") as f:
+    f.write(received_data)
 
-            if not packet.is_corrupt() and recv_seq_num == expected_seq_num:
-                print(f"Pacote recebido: {packet_data}")
-                Packet.send_ack(sock, recv_seq_num, addr)
-                expected_seq_num = 1 - expected_seq_num
-                received_data += packet_data.encode('utf-8')
-                if len(packet_data) < BUFFER_SIZE:
-                    break
-            else:
-                print(f"Pacote incorreto: {packet_data}, enviando ACK anterior")
-                Packet.send_ack(sock, 1 - expected_seq_num, addr)
-        except socket.timeout:
-            print(f"Tempo limite de {TIMEOUT_LIMIT} segundos atingido. Encerrando conexão...")
-            break
-
-    # Salva o arquivo recebido
-    with open("received_on_server_" + filename, "wb") as f:
-        f.write(received_data)
-
-    seq_num = 0
-
-    # Abre o arquivo recebido e armazenado e envia de volta para o cliente em pedaços de tamanho BUFFER_SIZE
-    with open("received_on_server_" + filename, "rb") as f:
-        data = f.read(BUFFER_SIZE)
-        while data:
-            # Envia o pedaço de arquivo para o cliente usando rdt3.0
-            packet = Packet(seq_num, data.decode('utf-8'))
-            if not Packet.packet_loss(PACKET_LOSS_PROB):
-                Packet.send_packet(sock, packet.to_bytes(), client_fixed_addr)
-                ack_received = Packet.wait_for_ack(sock, seq_num)
-            else:
-                print("Perdendo pacote intencionalmente")
-                ack_received = False
-
-            if ack_received:
-                seq_num = 1 - seq_num
-                data = f.read(BUFFER_SIZE)
-            else:
-                print("Reenviando pacote...")
-
-except socket.timeout:
-    f.close()
-    print(f"Tempo limite de {TIMEOUT_LIMIT} segundos atingo")
-
-print("Conexão encerrada")
-socket.close()
+# Fecha o socket
+sock.close()
