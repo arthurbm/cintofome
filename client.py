@@ -45,21 +45,21 @@ while True:
     try:
         # Recebe um pacote do servidor
         data, addr = sock.recvfrom(BUFFER_SIZE)
-        recv_seq_num, recv_checksum, packet_data = extract_data(data)
-        if recv_seq_num == seq_num:
+        packet = extract_packet(data)
+        if packet.seq_n == seq_num:
             # Avalia o checksum dele
-            if recv_checksum == Packet.real_checksum(packet_data.encode()):  # Change this!
-                print(f"Pacote recebido: {packet_data}")
-                send_ack(sock, recv_seq_num, addr)
+            if packet.checksum == packet.real_checksum(packet.encode()): 
+                print(f"Pacote recebido: {packet.data}")
+                send_ack(sock, packet.seq_n, addr)
                 seq_num = 1 - seq_num
-                received_data += packet_data.encode('utf-8')
-                if len(packet_data) < BUFFER_SIZE:
+                received_data += packet.data.encode('utf-8')
+                if len(packet.data) < BUFFER_SIZE:
                     break
             else:
-                print(f"Checksum incorreto: {recv_checksum}, esperado: {Packet.real_checksum(packet_data.encode())}") # Change this!
+                print(f"Checksum incorreto: {packet.checksum}, esperado: {packet.real_checksum(packet.encode())}") 
                 send_ack(sock, 1 - seq_num, addr)
         else:
-            print(f"Pacote incorreto: {packet_data}, enviando ACK anterior")
+            print(f"Pacote incorreto: {packet.data}, enviando ACK anterior")
             send_ack(sock, 1 - seq_num, addr)
     except socket.timeout:
         print(

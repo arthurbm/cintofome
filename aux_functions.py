@@ -9,19 +9,19 @@ class Packet:
         self.is_ack = is_ack
         self.data = data
         
-        if self.checksum is None:
+        if checksum is None:
             self.checksum = self.real_checksum()
 
     def make_packet(self):
         _checksum = self.real_checksum()
-        return (str(self.seq_n) + "|" + str(_checksum) + "|" + str(self.ack_n) + "|" + str(self.data))
+        return (str(self.seq_n) + "|" + str(_checksum) + "|" + str(self.is_ack) + "|" + str(self.data))
 
     # TODO: implement is_ack, checksum and is_corrupt
     def is_ACK(self):
         return self.is_ack
 
     def real_checksum(self):
-        data = str(self.seq_n) + str(self.ack_n) + str(self.data)
+        data = str(self.seq_n) + str(self.is_ack) + str(self.data)
         data = data.encode()
 
         polynomial = 0x1021
@@ -44,8 +44,8 @@ def extract_packet(string_packet):
     return Packet(seq_num, is_ack, data, checksum=checksum_)
 
 def send_packet(sock, packet, addr):
-    print(f"Enviando pacote: {packet.decode()}")
-    sock.sendto(packet, addr)
+    print(f"Enviando pacote: {packet.make_packet()}")
+    sock.sendto(packet.make_packet().encode(), addr)
 
 def send_ack(sock, seq_num, addr):
     ack_packet = make_ack_packet(seq_num)

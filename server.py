@@ -1,6 +1,6 @@
 import socket
 from constants import BUFFER_SIZE, TIMEOUT_LIMIT, UDP_IP, UDP_PORT
-from aux_functions import extract_packet, extract_data, send_packet, wait_for_ack, send_ack, Packet
+from aux_functions import extract_packet, send_packet, wait_for_ack, send_ack, Packet
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((UDP_IP, UDP_PORT))
@@ -12,13 +12,13 @@ try:
 
     # Recebe o nome do arquivo do cliente
     data, addr = sock.recvfrom(BUFFER_SIZE)
-    recv_seq_num, checksum, filename = extract_data(data)
-    if recv_seq_num == expected_seq_num and checksum == Packet.real_checksum(filename.encode()): # Change this!
-        print(f"Nome do arquivo recebido: {filename}")
-        send_ack(sock, recv_seq_num, addr)
+    packet = extract_packet(data)
+    if packet.seq_n == expected_seq_num and packet.checksum == packet.real_checksum(packet.data.encode()):
+        print(f"Nome do arquivo recebido: {packet.data}")
+        send_ack(sock, packet.seq_n, addr)
         expected_seq_num = 1 - expected_seq_num
     else:
-        print(f"Recebimento incorreto: {filename}, enviando ACK anterior")
+        print(f"Recebimento incorreto: {packet.data}, enviando ACK anterior")
         send_ack(sock, 1 - expected_seq_num, addr)
 
     client_fixed_addr = addr
@@ -30,21 +30,22 @@ try:
         try:
            # Recebe um pacote do cliente
             data, addr = sock.recvfrom(BUFFER_SIZE)
-            recv_seq_num, recv_checksum, packet_data = extract_data(data)
-            if recv_seq_num == expected_seq_num:
+            packet = extract_packet(data)
+            filename = packet.data
+            if packet.seq_n == expected_seq_num:
                 # Avalia o checksum dele
-                if recv_checksum ==  Packet.real_checksum(packet_data.encode()): # Change this!
-                    print(f"Pacote recebido: {packet_data}")
-                    send_ack(sock, recv_seq_num, addr)
+                if packet.checksum ==  packet.real_checksum(packet.data.encode()):
+                    print(f"Pacote recebido: {packet.data}")
+                    send_ack(sock, packet.seq_n, addr)
                     expected_seq_num = 1 - expected_seq_num
-                    received_data += packet_data.encode('utf-8')
-                    if len(packet_data) < BUFFER_SIZE:
+                    received_data += packet.data.encode('utf-8')
+                    if len(packet.data) < BUFFER_SIZE:
                         break
                 else:
-                    print(f"Checksum incorreto: {recv_checksum}, esperado: { Packet.real_checksum(packet_data.encode())}") # Change this!
+                    print(f"Checksum incorreto: {packet.checksum}, esperado: { Packet.real_checksum(packet.data.encode())}")
                     send_ack(sock, 1 - expected_seq_num, addr)
             else:
-                print(f"Pacote incorreto: {packet_data}, enviando ACK anterior")
+                print(f"Pacote incorreto: {packet.data}, enviando ACK anterior")
                 send_ack(sock, 1 - expected_seq_num, addr)
         except socket.timeout:
             print(
