@@ -48,22 +48,22 @@ def send_packet(sock, packet, addr):
     sock.sendto(packet.make_packet().encode(), addr)
 
 def send_ack(sock, seq_num, addr):
-    ack_packet = make_ack_packet(seq_num)
+    packet = Packet(seq_num, True, 0, 0)
     print(f"Enviando ACK: {seq_num}")
-    sock.sendto(ack_packet, addr)
+    sock.sendto(packet.make_packet().encode(), addr)
 
-def make_ack_packet(seq_num):
-    return (str(seq_num) + "|ACK").encode()
+# def make_ack_packet(seq_num):
+#    return (str(seq_num) + "|ACK").encode()
 
 def wait_for_ack(sock, expected_ack):
     try:
         data, _ = sock.recvfrom(BUFFER_SIZE)
-        ack = int(data.decode().split("|")[0])
-        if ack == expected_ack:
-            print(f"ACK recebido: {ack}")
+        ack = extract_packet(data)
+        if ack.is_ack and expected_ack == ack.seq_n:
+            print(f"ACK recebido: {ack.seq_n}")
             return True
         else:
-            print(f"ACK incorreto: {ack}, esperado: {expected_ack}")
+            print(f"ACK incorreto: {ack.seq_n}, esperado: {expected_ack}")
             return False
     except socket.timeout:
         print(f"Tempo limite de {TIMEOUT_LIMIT} segundos atingido.")
