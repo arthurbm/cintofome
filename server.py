@@ -48,7 +48,7 @@ try:
             break
 
     # Salva o arquivo recebido
-    with open("received_server_" + filename, "wb") as f:
+    with open("received_on_server_" + filename, "wb") as f:
         f.write(received_data)
 
     seq_num = 0
