@@ -3,11 +3,12 @@ import random
 from constants import BUFFER_SIZE, TIMEOUT_LIMIT
 
 def make_packet(seq_num, data):
-    return (str(seq_num) + "|" + data).encode()
+    checksum = calculate_checksum(data.encode())
+    return (str(seq_num) + "|" + str(checksum) + "|" + data).encode()
 
 def extract_data(packet):
-    seq_num, data = packet.decode().split("|", 1)
-    return int(seq_num), data
+    seq_num, checksum, data = packet.decode().split("|", 2)
+    return int(seq_num), int(checksum), data
 
 def extract_seq_num(packet):
     seq_num, _ = packet.decode().split("|", 1)
@@ -38,6 +39,18 @@ def wait_for_ack(sock, expected_ack):
     except socket.timeout:
         print(f"Tempo limite de {TIMEOUT_LIMIT} segundos atingido.")
         return False
+
+def calculate_checksum(data):
+    polynomial = 0x1021
+    crc = 0xFFFF
+    for byte in data:
+        crc ^= (byte << 8)
+        for _ in range(8):
+            if (crc & 0x8000):
+                crc = (crc << 1) ^ polynomial
+            else:
+                crc = (crc << 1)
+    return crc & 0xFFFF
 
 def packet_loss(probability):
     return random.random() < probability
