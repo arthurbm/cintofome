@@ -2,7 +2,27 @@ import socket
 import random
 from constants import BUFFER_SIZE, TIMEOUT_LIMIT
 
-def make_packet(seq_num, data):
+class Packet: 
+
+    def __init__(self, seq_n, ack_n, data):
+        self.seq_n = seq_n
+        self.ack_n = ack_n
+        self.data = data
+
+    def make_packet(self):
+        return (str(self.seq_n) + "|" + str(self.ack_n) + "|" + str(self.data))
+
+    # TODO: implement is_ack, checksum and is_corrupt
+    def is_ACK():
+
+    def checksum(self):
+        return  
+
+    def is_corrupt(self):
+        return  
+
+
+def make_packet(seq_num, checksum, data):
     return (str(seq_num) + "|" + data).encode()
 
 def extract_data(packet):
