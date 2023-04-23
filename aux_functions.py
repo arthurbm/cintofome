@@ -35,7 +35,7 @@ class Packet:
                     crc = (crc << 1) ^ polynomial
                 else:
                     crc = (crc << 1)
-        return crc & 0xFFFF 
+        return crc & 0xFFFF
 
     def is_corrupt(self):
         return self.real_checksum() != self.checksum
@@ -43,7 +43,7 @@ class Packet:
 
 def extract_packet(string_packet):
     seq_num, checksum_, is_ack, data = string_packet.decode().split("|", 3)
-    return Packet(int(seq_num), is_ack, data, checksum=checksum_)
+    return Packet(int(seq_num), is_ack, data, checksum=int(checksum_))
 
 def send_packet(sock, packet, addr):
     print(f"Enviando pacote: {packet.make_packet()}")
