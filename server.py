@@ -13,7 +13,8 @@ try:
     # Recebe o nome do arquivo do cliente
     data, addr = sock.recvfrom(BUFFER_SIZE)
     packet = extract_packet(data)
-    if packet.seq_n == expected_seq_num and packet.checksum == packet.real_checksum(packet.data.encode()):
+
+    if packet.seq_n == expected_seq_num:
         print(f"Nome do arquivo recebido: {packet.data}")
         send_ack(sock, packet.seq_n, addr)
         expected_seq_num = 1 - expected_seq_num
@@ -34,7 +35,7 @@ try:
             filename = packet.data
             if packet.seq_n == expected_seq_num:
                 # Avalia o checksum dele
-                if packet.checksum ==  packet.real_checksum(packet.data.encode()):
+                if packet.checksum ==  packet.real_checksum():
                     print(f"Pacote recebido: {packet.data}")
                     send_ack(sock, packet.seq_n, addr)
                     expected_seq_num = 1 - expected_seq_num
@@ -42,7 +43,7 @@ try:
                     if len(packet.data) < BUFFER_SIZE:
                         break
                 else:
-                    print(f"Checksum incorreto: {packet.checksum}, esperado: { Packet.real_checksum(packet.data.encode())}")
+                    print(f"Checksum incorreto: {packet.checksum}, esperado: { Packet.real_checksum()}")
                     send_ack(sock, 1 - expected_seq_num, addr)
             else:
                 print(f"Pacote incorreto: {packet.data}, enviando ACK anterior")

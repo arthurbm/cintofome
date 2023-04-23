@@ -13,7 +13,7 @@ sock.settimeout(TIMEOUT_LIMIT)
 seq_num = 0
 
 # Envia o nome do arquivo para o servidor
-packet = Packet(seq_num, filename, 0, 0)
+packet = Packet(seq_num, False, filename)
 send_packet(sock, packet, (UDP_IP, UDP_PORT))
 if wait_for_ack(sock, seq_num):
     seq_num = 1 - seq_num
@@ -48,7 +48,7 @@ while True:
         packet = extract_packet(data)
         if packet.seq_n == seq_num:
             # Avalia o checksum dele
-            if packet.checksum == packet.real_checksum(packet.encode()): 
+            if packet.checksum == packet.real_checksum(): 
                 print(f"Pacote recebido: {packet.data}")
                 send_ack(sock, packet.seq_n, addr)
                 seq_num = 1 - seq_num
@@ -56,7 +56,7 @@ while True:
                 if len(packet.data) < BUFFER_SIZE:
                     break
             else:
-                print(f"Checksum incorreto: {packet.checksum}, esperado: {packet.real_checksum(packet.encode())}") 
+                print(f"Checksum incorreto: {packet.checksum}, esperado: {packet.real_checksum()}") 
                 send_ack(sock, 1 - seq_num, addr)
         else:
             print(f"Pacote incorreto: {packet.data}, enviando ACK anterior")
