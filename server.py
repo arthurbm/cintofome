@@ -43,7 +43,7 @@ try:
                     if len(packet.data) < BUFFER_SIZE:
                         break
                 else:
-                    print(f"Checksum incorreto: {packet.checksum}, esperado: { Packet.real_checksum()}")
+                    print(f"Checksum incorreto: {packet.checksum}, esperado: {packet.real_checksum()}")
                     send_ack(sock, 1 - expected_seq_num, addr)
             else:
                 print(f"Pacote incorreto: {packet.data}, enviando ACK anterior")
