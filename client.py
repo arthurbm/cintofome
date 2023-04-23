@@ -52,7 +52,7 @@ while True:
         if packet.seq_n == seq_num:
             # Avalia o checksum dele
             if packet.checksum == packet.real_checksum(): 
-                print(f"Pacote recebido: {packet.data}")
+                print(f"Pacote recebido: {packet.seq_n}")
                 send_ack(sock, packet.seq_n, addr)
                 seq_num = 1 - seq_num
                 received_data += packet.data.encode('utf-8')
@@ -62,7 +62,7 @@ while True:
                 print(f"Checksum incorreto: {packet.checksum}, esperado: {packet.real_checksum()}") 
                 send_ack(sock, 1 - seq_num, addr)
         else:
-            print(f"Pacote incorreto: {packet.data}, enviando ACK anterior")
+            print(f"Pacote incorreto: {packet.seq_n}, enviando ACK anterior")
             send_ack(sock, 1 - seq_num, addr)
     except socket.timeout:
         print(

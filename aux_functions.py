@@ -26,7 +26,6 @@ class Packet:
     def make_packet(self):
         _checksum = self.real_checksum()
         packet_return = (str(self.seq_n) + "|" + str(_checksum) + "|" + str(self.is_ack) + "|" + str(self.data))
-        print("Pacote de " + str(len(packet_return.encode('utf-8'))) + " bytes")
         return packet_return
 
     def real_checksum(self):
@@ -53,7 +52,8 @@ def extract_packet(string_packet):
     return Packet(int(seq_num), is_ack, data, checksum=int(checksum_))
 
 def send_packet(sock, packet, addr):
-    print(f"Enviando pacote: {packet.make_packet()}")
+    print(f"Enviando pacote: {packet.seq_n} de")
+    print(" " + str(len(packet.make_packet().encode('utf-8'))) + " bytes")
     sock.sendto(packet.make_packet().encode(), addr)
 
 def send_ack(sock, seq_num, addr):

@@ -21,7 +21,7 @@ try:
         send_ack(sock, packet.seq_n, addr)
         expected_seq_num = 1 - expected_seq_num
     else:
-        print(f"Recebimento incorreto: {packet.data}, enviando ACK anterior")
+        print(f"Recebimento incorreto: {packet.seq_n}, enviando ACK anterior")
         send_ack(sock, 1 - expected_seq_num, addr)
 
     client_fixed_addr = addr
@@ -38,7 +38,7 @@ try:
             if packet.seq_n == expected_seq_num:
                 # Avalia o checksum dele
                 if packet.checksum ==  packet.real_checksum():
-                    print(f"Pacote recebido: {packet.data}")
+                    print(f"Pacote recebido: {packet.seq_n}")
                     send_ack(sock, packet.seq_n, addr)
                     expected_seq_num = 1 - expected_seq_num
                     received_data += packet.data.encode('utf-8')
@@ -48,7 +48,7 @@ try:
                     print(f"Checksum incorreto: {packet.checksum}, esperado: {packet.real_checksum()}")
                     send_ack(sock, 1 - expected_seq_num, addr)
             else:
-                print(f"Pacote incorreto: {packet.data}, enviando ACK anterior")
+                print(f"Pacote incorreto: {packet.seq_n}, enviando ACK anterior")
                 send_ack(sock, 1 - expected_seq_num, addr)
         except socket.timeout:
             print(
