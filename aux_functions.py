@@ -2,9 +2,40 @@ import socket
 import random
 from constants import BUFFER_SIZE, TIMEOUT_LIMIT
 
-def make_packet(seq_num, data):
-    checksum = calculate_checksum(data.encode())
-    return (str(seq_num) + "|" + str(checksum) + "|" + data).encode()
+class Packet: 
+
+    def __init__(self, seq_n, ack_n, data, checksum):
+        self.seq_n = seq_n
+        self.ack_n = ack_n
+        self.data = data
+        self.checksum = checksum
+
+    def make_packet(self, seq_num, data):
+        checksum = self.real_checksum(data.encode())
+        return (str(seq_num) + "|" + str(checksum) + "|" + data).encode()
+
+    # TODO: implement is_ack, checksum and is_corrupt
+    def is_ACK():
+        return
+
+    def real_checksum(data):
+        polynomial = 0x1021
+        crc = 0xFFFF
+        for byte in data:
+            crc ^= (byte << 8)
+            for _ in range(8):
+                if (crc & 0x8000):
+                    crc = (crc << 1) ^ polynomial
+                else:
+                    crc = (crc << 1)
+        return crc & 0xFFFF 
+
+    def is_corrupt(self):
+        return self.real_checksum() != self.checksum
+
+
+def make_packet(seq_num, checksum, data):
+    return (str(seq_num) + "|" + data).encode()
 
 def extract_data(packet):
     seq_num, checksum, data = packet.decode().split("|", 2)
@@ -39,18 +70,6 @@ def wait_for_ack(sock, expected_ack):
     except socket.timeout:
         print(f"Tempo limite de {TIMEOUT_LIMIT} segundos atingido.")
         return False
-
-def calculate_checksum(data):
-    polynomial = 0x1021
-    crc = 0xFFFF
-    for byte in data:
-        crc ^= (byte << 8)
-        for _ in range(8):
-            if (crc & 0x8000):
-                crc = (crc << 1) ^ polynomial
-            else:
-                crc = (crc << 1)
-    return crc & 0xFFFF
 
 def packet_loss(probability):
     return random.random() < probability
