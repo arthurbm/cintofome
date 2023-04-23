@@ -31,16 +31,20 @@ try:
             # Recebe um pacote do cliente
             data, addr = sock.recvfrom(BUFFER_SIZE)
             recv_seq_num, packet_data = extract_data(data)
-            if recv_seq_num == expected_seq_num:
-                print(f"Pacote recebido: {packet_data}")
-                send_ack(sock, recv_seq_num, addr)
-                expected_seq_num = 1 - expected_seq_num
-                received_data += packet_data.encode('utf-8')
-                if len(packet_data) < BUFFER_SIZE:
-                    break
+            if recv_seq_num is not None:  # Verifica se o pacote não está corrompido
+                if recv_seq_num == expected_seq_num:
+                    print(f"Pacote recebido: {packet_data}")
+                    send_ack(sock, recv_seq_num, addr)
+                    expected_seq_num = 1 - expected_seq_num
+                    received_data += packet_data.encode('utf-8')
+                    if len(packet_data) < BUFFER_SIZE:
+                        break
+                else:
+                    print(
+                        f"Pacote incorreto: {packet_data}, enviando ACK anterior")
+                    send_ack(sock, 1 - expected_seq_num, addr)
             else:
-                print(
-                    f"Pacote incorreto: {packet_data}, enviando ACK anterior")
+                print("Pacote corrompido recebido, enviando ACK anterior")
                 send_ack(sock, 1 - expected_seq_num, addr)
         except socket.timeout:
             print(
@@ -67,6 +71,7 @@ try:
                 data = f.read(BUFFER_SIZE)
             else:
                 print("Reenviando pacote...")
+
 
 except socket.timeout:
     f.close()

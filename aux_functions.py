@@ -1,13 +1,21 @@
 import socket
 import random
+import zlib
 from constants import BUFFER_SIZE, TIMEOUT_LIMIT
 
 def make_packet(seq_num, data):
-    return (str(seq_num) + "|" + data).encode()
+    checksum = zlib.crc32(data.encode('utf-8'))
+    return (f"{seq_num}|{checksum}|{data}").encode()
 
 def extract_data(packet):
-    seq_num, data = packet.decode().split("|", 1)
-    return int(seq_num), data
+    seq_num, recv_checksum, data = packet.decode().split("|", 2)
+    recv_checksum = int(recv_checksum)
+    calculated_checksum = zlib.crc32(data.encode('utf-8'))
+
+    if recv_checksum == calculated_checksum:
+        return int(seq_num), data
+    else:
+        return None, None  # Indicando que o pacote está corrompido
 
 def extract_seq_num(packet):
     seq_num, _ = packet.decode().split("|", 1)
@@ -23,7 +31,7 @@ def send_ack(sock, seq_num, addr):
     sock.sendto(ack_packet, addr)
 
 def make_ack_packet(seq_num):
-    return (str(seq_num) + "|ACK").encode()
+    return (f"{seq_num}|ACK").encode()
 
 def wait_for_ack(sock, expected_ack):
     try:
