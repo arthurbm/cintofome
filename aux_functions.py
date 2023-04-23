@@ -66,7 +66,8 @@ def send_ack(sock, seq_num, addr):
 
 def wait_for_ack(sock, expected_ack):
     try:
-        data, _ = sock.recvfrom(BUFFER_SIZE)
+        ack = Packet(0, True, "")
+        data, _ = sock.recvfrom(BUFFER_SIZE - ack.reading_size())
         ack = extract_packet(data)
         if ack.is_ack and expected_ack == ack.seq_n:
             print(f"ACK recebido: {ack.seq_n}")
