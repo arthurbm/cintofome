@@ -42,7 +42,7 @@ try:
                     send_ack(sock, packet.seq_n, addr)
                     expected_seq_num = 1 - expected_seq_num
                     received_data += packet.data.encode('utf-8')
-                    if len(packet.data) < BUFFER_SIZE:
+                    if len(packet.data) + packet.reading_size() < BUFFER_SIZE:
                         break
                 else:
                     print(f"Checksum incorreto: {packet.checksum}, esperado: {packet.real_checksum()}")
@@ -63,7 +63,9 @@ try:
 
     # Abre o arquivo recebido e armazenado e envia de volta para o cliente em pedaços de tamanho BUFFER_SIZE
     with open("received_on_server_" + filename, "rb") as f:
-        data = f.read(BUFFER_SIZE)
+        packet = Packet(seq_num, False, "")
+        data = f.read(BUFFER_SIZE - packet.reading_size())
+
         while data:
             # Envia o pedaço de arquivo para o cliente usando rdt3.0
             packet = Packet(seq_num, False, data.decode('utf-8'))
@@ -72,7 +74,9 @@ try:
             ack_received = wait_for_ack(sock, seq_num)
             if ack_received:
                 seq_num = 1 - seq_num
-                data = f.read(BUFFER_SIZE)
+
+                packet = Packet(seq_num, False, "")
+                data = f.read(BUFFER_SIZE - packet.reading_size())
             else:
                 print("Reenviando pacote...")
 
