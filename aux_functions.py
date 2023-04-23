@@ -10,15 +10,17 @@ class Packet:
         self.data = data
         self.checksum = checksum
 
-    def make_packet(self, seq_num, data):
-        checksum = self.real_checksum(data.encode())
-        return (str(seq_num) + "|" + str(checksum) + "|" + data).encode()
+    def make_packet(self):
+        checksum = self.real_checksum(self.data.encode())
+        return (str(self.seq_n) + "|" + str(self.checksum) + "|" + self.data).encode()
 
     # TODO: implement is_ack, checksum and is_corrupt
-    def is_ACK():
-        return
+    def is_ACK(self):
+        return (self.seq_n == "" and self.data == "")
 
-    def real_checksum(data):
+    def real_checksum(self):
+        data = self.make_packet()
+
         polynomial = 0x1021
         crc = 0xFFFF
         for byte in data:
