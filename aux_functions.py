@@ -4,22 +4,24 @@ from constants import BUFFER_SIZE, TIMEOUT_LIMIT
 
 class Packet: 
 
-    def __init__(self, seq_n, ack_n, data):
+    def __init__(self, seq_n, ack_n, data, checksum):
         self.seq_n = seq_n
         self.ack_n = ack_n
         self.data = data
+        self.checksum = checksum
 
     def make_packet(self):
         return (str(self.seq_n) + "|" + str(self.ack_n) + "|" + str(self.data))
 
     # TODO: implement is_ack, checksum and is_corrupt
     def is_ACK():
+        
 
-    def checksum(self):
+    def real_checksum():
         return  
 
     def is_corrupt(self):
-        return  
+        return self.real_checksum() != self.checksum
 
 
 def make_packet(seq_num, checksum, data):
