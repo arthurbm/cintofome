@@ -6,7 +6,7 @@ from aux_functions import extract_packet
 RDTSocket = RDT()
 
 #mensagem vazia pra o contato com servidor
-data = ''
+data = 'opa'
 
 while True:
   

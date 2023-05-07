@@ -53,7 +53,8 @@ data = extract_packet(data.encode()).data
 
 #continua o mesmo processo, enquanto não receber um `chefia`
 while(data != "chefia"):
-  data = hour() + " cliente:"
+  data = hour() + "CINtofome: escreva chefia para receber o atendimento!\n"
+  data += hour() + " cliente: "
   RDTSocket.send(data)
   data = RDTSocket.receive()
   data = extract_packet(data.encode()).data
@@ -105,7 +106,7 @@ while True:
 
   match data:
     #opção para mostrar o cardápio
-    case '1' | 'cardapio':
+    case '1' | 'cardápio' | 'cardapio':
       res = hour() + " CINtofome:\n" + showMenu() + hour() + " " + name + ": "
       RDTSocket.send(res)
     #opção para fazer o pedido
@@ -138,7 +139,7 @@ while True:
       RDTSocket.send(res)
 
     #opção para a conta ser de toda a mesa, na qual está sentado o cliente em contato com o servidor
-    case '4' | 'nao fecho com robo, chame seu gerente':
+    case '4' | 'conta da mesa':
       total_orders = str(orders[table]["total"])
       res = f"CINtofome:\n"
 
@@ -152,10 +153,10 @@ while True:
       RDTSocket.send(res)
 
     #opção para que seja realizado o pagamento
-    case '5':
+    case '5' | 'pagar':
       bill = orders[table][name]["comanda"]
       closed = orders[table]["total"]
-      valid = False
+      isValid = False
       dif = 0
 
       #mostra o valor tal da conta do cliente, e da mesa. e aguarda o comando de pagamento
@@ -168,10 +169,10 @@ while True:
       #loop para validação do pagamento 
       while True:
         if str(data) == 'nao':  
-          res = f"{hour()} CINtofome: Operação de pagamento cancelada!"
+          res = f"{hour()} CINtofome: Operação de pagamento cancelada!\n"
           break
 
-        if (valid and str(data) == 'sim'):   
+        if (isValid and str(data) == 'sim'):   
           #remove pedido dos clientes da tabela     
           orders[table][name]["comanda"] = 0.0
           orders[table][name]["pedidos"] = []
@@ -192,33 +193,36 @@ while True:
           payment = True
           break
         # Se tiver inserido um valor válido
-        if (float(data) > bill) and float(data) <= total:  
+        if (float(data) > bill) and float(data) <= closed:  
           dif = float(data) - bill
           res = f"{hour()} Cintofome: Você está pagando {dif} a mais que sua conta.\n{hour()} Cintofome: O valor excedente será distribuído.\n{hour()} Cintofome: "
-          valido = True
-          RDTSocket.send(resp.encode('utf-8'))
+          isValid = True
+          RDTSocket.send(resp)
         # Pagamento exato
         elif (float(data) == bill): 
           res = f"{hour()} Cintofome: "
-          valido = True
+          isValid = True
         # Se tiver inserido um valor maior do que a conta da mesa
-        elif (float(data) > total): 
+        elif (float(data) > closed): 
           res = f"{hour()} Cintofome: Valor maior do que o esperado, no momento não aceitamos gorjetas. \n" + base
         # Se tiver inserido um valor menor que a conta individual
         elif (float(data) < bill): 
           res = f"{hour()} Cintofome: Pagamento menor que o devido, nao fazemos fiado. \n" + base
 
-        if valido:
+        if isValid:
           res += f"Deseja confirmar o pagamento? (digite sim para confirmar)\n{hour()} {name}: "
 
         RDTSocket.send(res)
         data = RDTSocket.receive()
+        print(data)
         data = extract_packet(data.encode()).data
+        print(data)
 
       res += f"{hour()} {name}: "
+      RDTSocket.send(res)
 
     #opção para levantar e encerrar conexão
-    case '6' | 'conta da mesa':
+    case '6' | 'levantar':
       #se não tiver pago, nn permite encerrar a conexão
       if(not payment):
         res = hour() + " " + name + ": Você ainda não pagou sua conta\n" + hour() + " " + name + ": "
@@ -228,8 +232,12 @@ while True:
       if(payment):
         res = "ok"
         del orders[table][name]
-        RDTSocket.send(resp.encode('utf-8'))
+        RDTSocket.send(res)
         break
+    
+    case _:
+      res = hour() + " " + name + ": Escolha uma das opções possíveis!\n" + hour() + " " + name + ": "
+      RDTSocket.send(res)
 
 # se despede termina a conexão
 data = hour() + " " + name + ": Volte sempre ^^ \n"
