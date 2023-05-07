@@ -214,9 +214,9 @@ while True:
 
         RDTSocket.send(res)
         data = RDTSocket.receive()
-        print(data)
+        # print(data)
         data = extract_packet(data.encode()).data
-        print(data)
+        # print(data)
 
       res += f"{hour()} {name}: "
       RDTSocket.send(res)
